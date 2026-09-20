@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadSmartInboxQueues",
+      "Effect": "Allow",
+      "Action": ["sqs:ReceiveMessage", "sqs:GetQueueAttributes"],
+      "Resource": [
+        "arn:aws:sqs:REGION:ACCOUNT_ID:HighPriorityQueue",
+        "arn:aws:sqs:REGION:ACCOUNT_ID:NormalQueue"
+      ]
+    }
+  ]
+}
