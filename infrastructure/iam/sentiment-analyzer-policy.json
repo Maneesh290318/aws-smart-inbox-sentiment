@@ -1,0 +1,35 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadIncomingObjects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:GetObjectVersion"],
+      "Resource": "arn:aws:s3:::YOUR_INBOX_BUCKET/incoming/*"
+    },
+    {
+      "Sid": "DetectSentiment",
+      "Effect": "Allow",
+      "Action": "comprehend:DetectSentiment",
+      "Resource": "*"
+    },
+    {
+      "Sid": "SendToSmartInboxQueues",
+      "Effect": "Allow",
+      "Action": "sqs:SendMessage",
+      "Resource": [
+        "arn:aws:sqs:REGION:ACCOUNT_ID:HighPriorityQueue",
+        "arn:aws:sqs:REGION:ACCOUNT_ID:NormalQueue"
+      ]
+    },
+    {
+      "Sid": "OptionalProcessedObjectManagement",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::YOUR_INBOX_BUCKET/processed/*",
+        "arn:aws:s3:::YOUR_INBOX_BUCKET/incoming/*"
+      ]
+    }
+  ]
+}
