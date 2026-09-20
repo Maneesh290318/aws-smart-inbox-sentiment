@@ -1,0 +1,18 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "eventName": "ObjectCreated:Put",
+      "s3": {
+        "bucket": {
+          "name": "YOUR_INBOX_BUCKET"
+        },
+        "object": {
+          "key": "incoming/complaint.txt",
+          "size": 104
+        }
+      }
+    }
+  ]
+}
