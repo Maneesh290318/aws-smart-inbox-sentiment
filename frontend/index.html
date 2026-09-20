@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Inbox | Sentiment Feed</title>
+  <style>
+    :root { --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#64748b; --high:#dc2626; --normal:#16a34a; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    header { padding:2rem; background:#0f172a; color:#fff; }
+    header div { max-width:1100px; margin:auto; }
+    h1 { margin:0 0 .35rem; }
+    header p { margin:0; opacity:.8; }
+    main { max-width:1100px; margin:1.5rem auto; padding:0 1rem; display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
+    .card { background:var(--card); border-radius:14px; padding:1rem; box-shadow:0 8px 25px rgba(15,23,42,.06); }
+    .message { border:1px solid #e2e8f0; border-left:4px solid; border-radius:10px; padding:.75rem; margin:.6rem 0; }
+    .high { border-left-color:var(--high); } .normal { border-left-color:var(--normal); }
+    .top { display:flex; justify-content:space-between; gap:.5rem; font-weight:600; font-size:.85rem; }
+    .badge { font-size:.7rem; background:#f1f5f9; padding:.15rem .45rem; border-radius:999px; }
+    .preview,.scores,.time,#status { color:var(--muted); font-size:.78rem; margin-top:.4rem; }
+  </style>
+</head>
+<body>
+<header><div><h1>Smart Inbox</h1><p>Serverless sentiment-based customer-message routing on AWS</p></div></header>
+<main>
+  <section class="card"><h2>High Priority</h2><div id="high"></div></section>
+  <section class="card"><h2>Normal Priority</h2><div id="normal"></div></section>
+  <section class="card"><h2>Connection</h2><div id="status">Waiting for API response...</div></section>
+</main>
+<script>
+  // Replace with your API Gateway base URL before deployment.
+  const API_BASE = "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com";
+
+  const high = document.getElementById("high");
+  const normal = document.getElementById("normal");
+  const status = document.getElementById("status");
+
+  function render(container, items, priority) {
+    container.innerHTML = "";
+    if (!items.length) {
+      container.innerHTML = '<p class="preview">No messages found.</p>';
+      return;
+    }
+    items.forEach(item => {
+      const scores = item.scores || {};
+      const card = document.createElement("article");
+      card.className = `message ${priority}`;
+      card.innerHTML = `
+        <div class="top"><span>${item.s3_key || "message.txt"}</span><span class="badge">${item.sentiment || "UNKNOWN"}</span></div>
+        <div class="preview">${(item.preview || "").slice(0, 180)}</div>
+        <div class="scores">Positive ${((scores.positive || 0)*100).toFixed(1)}% · Negative ${((scores.negative || 0)*100).toFixed(1)}% · Neutral ${((scores.neutral || 0)*100).toFixed(1)}%</div>
+        <div class="time">${item.timestamp || ""}</div>`;
+      container.appendChild(card);
+    });
+  }
+
+  async function refresh() {
+    try {
+      const response = await fetch(`${API_BASE}/results`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      render(high, data.filter(x => x.queue === "HighPriorityQueue"), "high");
+      render(normal, data.filter(x => x.queue === "NormalQueue"), "normal");
+      status.textContent = `Connected · Last updated ${new Date().toLocaleTimeString()}`;
+    } catch (error) {
+      status.textContent = "Unable to fetch results. Verify API URL and CORS configuration.";
+      console.error(error);
+    }
+  }
+
+  refresh();
+  setInterval(refresh, 5000);
+</script>
+</body>
+</html>
